@@ -1,3 +1,27 @@
+This project is a modified version of the open-source 
+Auto_job_applier_linkedIn tool by Sai Vignesh Golla (AGPL-3.0).
+I customized the configuration, cleaned sections, and added 
+my own patches for personal use.
+
+I customized the tool for AI-related job searches, removed aggressive filtering, and stabilized the job-application flow. Key changes include:
+
+Replaced developer search terms with AI/content/operations roles
+
+Disabled all job blacklist and bad-word filters
+
+Added remote-only filtering and updated job types
+
+Lowered application switching threshold
+
+Enabled debug pauses for tuning
+
+Removed code sections that caused element-not-found errors
+
+Adjusted Chrome/stealth settings for stability
+
+These changes make the bot more relevant for AI/content roles and significantly reduce skipped or rejected applications.
+
+
 # LinkedIn AI Auto Job Applier 🤖
 This is an web scraping bot that automates the process of job applications on LinkedIn. It searches for jobs relevant to you, answers all questions in application form, customizes your resume based on the collected job information, such as skills required, description, about company, etc. and applies to the job. Can apply 100+ jobs in less than 1 hour. 
 

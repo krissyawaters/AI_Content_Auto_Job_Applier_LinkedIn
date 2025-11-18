@@ -1,13 +1,10 @@
-__pycache__
-.vscode
-
-all excels
-all resumes
-logs
-
-old
-
 secrets.py
-config/personals.py
-.venv
-apikeys.py
+all resumes/
+all excels/
+logs/
+*.csv
+*.pdf
+*.xlsx
+*.log
+__pycache__/
+venv/

@@ -362,57 +362,88 @@ def get_job_description(
     bool,
     str | None,
     str | None
-    ]:
-    '''
-    # Job Description
-    Function to extract job description from About the Job.
-    ### Returns:
-    - `jobDescription: str | 'Unknown'`
-    - `experience_required: int | 'Unknown'`
-    - `skip: bool`
-    - `skipReason: str | None`
-    - `skipMessage: str | None`
-    '''
+]:
+    """
+    Job Description
+    """
+    jobDescription = "Unknown"
+    experience_required: int | str = "Unknown"
+    found_masters = 0
+    skip = False
+    skipReason = None
+    skipMessage = None
+
     try:
-        ##> ------ Dheeraj Deshwal : dheeraj9811 Email:dheeraj20194@iiitd.ac.in/dheerajdeshwal9811@gmail.com - Feature ------
-        jobDescription = "Unknown"
-        ##<
-        experience_required = "Unknown"
-        found_masters = 0
-        jobDescription = find_by_class(driver, "jobs-box__html-content").text
+        # Try multiple possible containers for the description
+        desc_elem = try_find_by_classes(
+            driver,
+            [
+                "jobs-box__html-content",                      # old
+                "jobs-description__content",                   # other variants
+                "jobs-description__container",
+                "jobs-unified-description__content",
+                "job-details-about-the-job-module__description",  # from your HTML
+                "feed-shared-inline-show-more-text",           # inner wrapper
+            ]
+        )
+
+        if not desc_elem:
+            print_lg("Unable to locate job description container, using 'Unknown'.")
+            return jobDescription, experience_required, skip, skipReason, skipMessage
+
+        jobDescription = desc_elem.text
         jobDescriptionLow = jobDescription.lower()
-        skip = False
-        skipReason = None
-        skipMessage = None
+
+        # default values
+        experience_required = "Unknown"
+
+        # BAD WORD FILTERING (now effectively disabled if your lists are empty)
         for word in bad_words:
             if word.lower() in jobDescriptionLow:
-                skipMessage = f'\n{jobDescription}\n\nContains bad word "{word}". Skipping this job!\n'
+                skipMessage = (
+                    f'\n{jobDescription}\n\nContains bad word "{word}". Skipping this job!\n'
+                )
                 skipReason = "Found a Bad Word in About Job"
                 skip = True
                 break
-        if not skip and security_clearance == False and ('polygraph' in jobDescriptionLow or 'clearance' in jobDescriptionLow or 'secret' in jobDescriptionLow):
-            skipMessage = f'\n{jobDescription}\n\nFound "Clearance" or "Polygraph". Skipping this job!\n'
+
+        if not skip and security_clearance is False and (
+            "polygraph" in jobDescriptionLow
+            or "clearance" in jobDescriptionLow
+            or "secret" in jobDescriptionLow
+        ):
+            skipMessage = (
+                f'\n{jobDescription}\n\nFound "Clearance" or "Polygraph". Skipping this job!\n'
+            )
             skipReason = "Asking for Security clearance"
             skip = True
+
         if not skip:
-            if did_masters and 'master' in jobDescriptionLow:
-                print_lg(f'Found the word "master" in \n{jobDescription}')
+            if did_masters and "master" in jobDescriptionLow:
+                print_lg('Found the word "master" in job description.')
                 found_masters = 2
+
             experience_required = extract_years_of_experience(jobDescription)
-            if current_experience > -1 and experience_required > current_experience + found_masters:
-                skipMessage = f'\n{jobDescription}\n\nExperience required {experience_required} > Current Experience {current_experience + found_masters}. Skipping this job!\n'
+            if (
+                isinstance(experience_required, int)
+                and current_experience > -1
+                and experience_required > current_experience + found_masters
+            ):
+                skipMessage = (
+                    f'\n{jobDescription}\n\nExperience required {experience_required} > '
+                    f"Current Experience {current_experience + found_masters}. Skipping this job!\n"
+                )
                 skipReason = "Required experience is high"
                 skip = True
+
     except Exception as e:
-        if jobDescription == "Unknown":    print_lg("Unable to extract job description!")
+        if jobDescription == "Unknown":
+            print_lg("Unable to extract job description!", e)
         else:
             experience_required = "Error in extraction"
-            print_lg("Unable to extract years of experience required!")
-            # print_lg(e)
-    finally:
-        return jobDescription, experience_required, skip, skipReason, skipMessage
-        
+            print_lg("Unable to extract years of experience required!", e)
 
+    return jobDescription, experience_required, skip, skipReason, skipMessage
 
 # Function to upload resume
 def upload_resume(modal: WebElement, resume: str) -> tuple[bool, str]:
